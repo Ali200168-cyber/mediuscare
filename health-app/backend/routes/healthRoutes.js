@@ -7,22 +7,55 @@ const { sendSmsNotification } = require("../services/emailService");
 
 const CRITICAL_GLUCOSE_THRESHOLD = Number(process.env.CRITICAL_GLUCOSE_THRESHOLD || 250);
 
+const parsePositive = (value, label, { min = 0, max = Infinity, required = true } = {}) => {
+  if (value === undefined || value === null || value === "") {
+    if (!required) return null;
+    throw new Error(`${label} is required.`);
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n)) throw new Error(`${label} must be a valid number.`);
+  if (n < min) {
+    throw new Error(min <= 0 ? `${label} cannot be negative.` : `${label} must be at least ${min}.`);
+  }
+  if (n > max) throw new Error(`${label} is out of range.`);
+  return n;
+};
+
+const normalizeSymptoms = (symptoms) => {
+  const list = Array.isArray(symptoms)
+    ? symptoms.map((s) => String(s || "").trim()).filter(Boolean)
+    : [];
+  if (!list.length) throw new Error("Select symptoms or choose “No symptoms”.");
+  const hasNone = list.some((s) => s.toLowerCase() === "no symptoms");
+  if (hasNone) return ["No symptoms"];
+  return list;
+};
+
 router.post("/", auth(["patient"]), async (req, res) => {
   const { height, weight, gender, glucose, systolic, diastolic, symptoms, mealHoursAgo, age, notes } = req.body;
 
   try {
+    const normalizedSymptoms = normalizeSymptoms(symptoms);
+    const parsed = {
+      height: height != null && height !== "" ? parsePositive(height, "Height", { min: 0, max: 300, required: false }) : undefined,
+      weight: parsePositive(weight, "Weight", { min: 0.1, max: 500 }),
+      gender,
+      glucose: parsePositive(glucose, "Glucose", { min: 0.1, max: 600 }),
+      systolic: parsePositive(systolic, "Systolic blood pressure", { min: 0.1, max: 300 }),
+      diastolic: parsePositive(diastolic, "Diastolic blood pressure", { min: 0.1, max: 200 }),
+      symptoms: normalizedSymptoms,
+      mealHoursAgo: parsePositive(mealHoursAgo, "Meal hours ago", { min: 0, max: 72 }),
+      age: parsePositive(age, "Age", { min: 1, max: 120 }),
+      notes,
+    };
+
+    if (parsed.systolic <= parsed.diastolic) {
+      return res.status(400).json({ success: false, message: "Systolic blood pressure must be higher than diastolic." });
+    }
+
     const entry = await HealthEntry.create({
       patient: req.user._id,
-      height,
-      weight,
-      gender,
-      glucose,
-      systolic,
-      diastolic,
-      symptoms,
-      mealHoursAgo,
-      age,
-      notes,
+      ...parsed,
     });
 
     const glucoseValue = Number(glucose);
@@ -100,6 +133,11 @@ router.post("/", auth(["patient"]), async (req, res) => {
 
     res.json({ success: true, entry });
   } catch (err) {
+    const msg = err?.message || "Failed to submit health data";
+    const isValidation = /required|negative|valid number|symptoms|diastolic|range/i.test(msg);
+    if (isValidation) {
+      return res.status(400).json({ success: false, message: msg });
+    }
     console.error("Health data submission error:", err);
     res.status(500).json({ success: false, message: "Failed to submit health data" });
   }

@@ -357,6 +357,17 @@
   color: #fff;
 }
 
+.pt-symptom-preset--none.is-selected {
+  background: linear-gradient(135deg, #64748b, #475569);
+}
+
+.pt-symptom-preset:disabled,
+.pt-custom-symptom-bar .pt-input:disabled,
+.pt-custom-symptom-add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .pt-custom-symptom-bar {
   display: flex;
   gap: 10px;

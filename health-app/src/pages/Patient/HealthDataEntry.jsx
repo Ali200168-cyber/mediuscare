@@ -6,7 +6,22 @@ import { PtPageHeader, PtButton, PtAlert, patientFetch } from "../../components/
 import "../../styles/Patient/patient-pages.css";
 
 const PRESET_SYMPTOMS = ["Headache", "Dizziness", "Fatigue", "Nausea", "Blurred vision", "Sweating", "Thirst", "Shaking"];
+const NO_SYMPTOMS_LABEL = "No symptoms";
 const REQUIRED = ["age", "gender", "weight", "glucose", "systolic", "diastolic", "meal", "mealHoursAgo"];
+
+const parseNum = (value) => {
+  const n = Number(String(value).trim());
+  return Number.isFinite(n) ? n : NaN;
+};
+
+const NUMERIC_RULES = {
+  age: { min: 1, max: 120, label: "Age" },
+  weight: { min: 0.1, max: 500, label: "Weight" },
+  glucose: { min: 0.1, max: 600, label: "Glucose" },
+  systolic: { min: 0.1, max: 300, label: "Systolic BP" },
+  diastolic: { min: 0.1, max: 200, label: "Diastolic BP" },
+  mealHoursAgo: { min: 0, max: 72, label: "Hours since meal" },
+};
 
 const HealthDataEntry = () => {
   const navigate = useNavigate();
@@ -36,20 +51,36 @@ const HealthDataEntry = () => {
   };
 
   const toggleSymptom = (label) => {
-    setData((p) => ({
-      ...p,
-      symptoms: p.symptoms.includes(label)
-        ? p.symptoms.filter((x) => x !== label)
-        : [...p.symptoms, label],
-    }));
+    setData((p) => {
+      if (label === NO_SYMPTOMS_LABEL) {
+        const has = p.symptoms.includes(NO_SYMPTOMS_LABEL);
+        return { ...p, symptoms: has ? [] : [NO_SYMPTOMS_LABEL] };
+      }
+      const withoutNone = p.symptoms.filter((x) => x !== NO_SYMPTOMS_LABEL);
+      return {
+        ...p,
+        symptoms: withoutNone.includes(label)
+          ? withoutNone.filter((x) => x !== label)
+          : [...withoutNone, label],
+      };
+    });
     setErrors((p) => ({ ...p, symptoms: "" }));
   };
 
   const addCustomSymptom = () => {
     const value = data.customSymptom.trim();
     if (!value) return;
+    if (value.toLowerCase() === NO_SYMPTOMS_LABEL.toLowerCase()) {
+      setData((p) => ({ ...p, symptoms: [NO_SYMPTOMS_LABEL], customSymptom: "" }));
+      setErrors((p) => ({ ...p, symptoms: "" }));
+      return;
+    }
     if (!data.symptoms.some((s) => s.toLowerCase() === value.toLowerCase())) {
-      setData((p) => ({ ...p, symptoms: [...p.symptoms, value], customSymptom: "" }));
+      setData((p) => ({
+        ...p,
+        symptoms: [...p.symptoms.filter((s) => s !== NO_SYMPTOMS_LABEL), value],
+        customSymptom: "",
+      }));
     } else {
       setData((p) => ({ ...p, customSymptom: "" }));
     }
@@ -60,12 +91,51 @@ const HealthDataEntry = () => {
     setData((p) => ({ ...p, symptoms: p.symptoms.filter((s) => s !== label) }));
   };
 
+  const validateNumeric = (field, next) => {
+    const rule = NUMERIC_RULES[field];
+    if (!rule) return;
+    const raw = String(data[field]).trim();
+    if (!raw) {
+      next[field] = "Required";
+      return;
+    }
+    const n = parseNum(raw);
+    if (Number.isNaN(n)) {
+      next[field] = "Enter a valid number";
+      return;
+    }
+    if (n < 0) {
+      next[field] = "Cannot be negative";
+      return;
+    }
+    if (n < rule.min) {
+      next[field] = `${rule.label} must be at least ${rule.min}`;
+      return;
+    }
+    if (n > rule.max) {
+      next[field] = `${rule.label} must be at most ${rule.max}`;
+    }
+  };
+
   const validate = () => {
     const next = {};
     REQUIRED.forEach((f) => {
-      if (!String(data[f]).trim()) next[f] = "Required";
+      if (["age", "weight", "glucose", "systolic", "diastolic", "mealHoursAgo"].includes(f)) {
+        validateNumeric(f, next);
+      } else if (!String(data[f]).trim()) {
+        next[f] = "Required";
+      }
     });
-    if (!data.symptoms.length) next.symptoms = "Add at least one symptom";
+    if (data.symptoms.length === 0) {
+      next.symptoms = "Select symptoms or choose “No symptoms”";
+    }
+    if (!next.systolic && !next.diastolic) {
+      const sys = parseNum(data.systolic);
+      const dia = parseNum(data.diastolic);
+      if (Number.isFinite(sys) && Number.isFinite(dia) && sys <= dia) {
+        next.systolic = "Systolic should be higher than diastolic";
+      }
+    }
     setErrors(next);
     return !Object.keys(next).length;
   };
@@ -91,7 +161,11 @@ const HealthDataEntry = () => {
       });
       const result = await res.json();
       if (result.success) navigate("/patient/dashboard");
-      else alert(result.message || "Could not save.");
+      else {
+        const msg = result.message || "Could not save.";
+        if (msg.toLowerCase().includes("symptom")) setErrors((p) => ({ ...p, symptoms: msg }));
+        else alert(msg);
+      }
     } catch {
       alert("Connection error.");
     } finally {
@@ -99,7 +173,8 @@ const HealthDataEntry = () => {
     }
   };
 
-  const customOnly = data.symptoms.filter((s) => !PRESET_SYMPTOMS.includes(s));
+  const customOnly = data.symptoms.filter((s) => !PRESET_SYMPTOMS.includes(s) && s !== NO_SYMPTOMS_LABEL);
+  const symptomsLocked = data.symptoms.includes(NO_SYMPTOMS_LABEL);
 
   return (
     <PatientLayout>
@@ -141,7 +216,7 @@ const HealthDataEntry = () => {
             <div className="pt-vitals-fields pt-grid pt-grid-2">
               <label className="pt-field">
                 <span className="pt-form-label">Age</span>
-                <input className="pt-input" type="number" inputMode="numeric" placeholder="Years" value={data.age} onChange={(e) => set("age", e.target.value)} />
+                <input className="pt-input" type="number" inputMode="numeric" min={1} placeholder="Years" value={data.age} onChange={(e) => set("age", e.target.value)} />
                 {errors.age && <span className="pt-field-error">{errors.age}</span>}
               </label>
               <label className="pt-field">
@@ -155,7 +230,7 @@ const HealthDataEntry = () => {
               </label>
               <label className="pt-field pt-field-span-2">
                 <span className="pt-form-label">Weight (kg)</span>
-                <input className="pt-input" type="number" inputMode="decimal" placeholder="e.g. 70" value={data.weight} onChange={(e) => set("weight", e.target.value)} />
+                <input className="pt-input" type="number" inputMode="decimal" min={0} step="0.1" placeholder="e.g. 70" value={data.weight} onChange={(e) => set("weight", e.target.value)} />
                 {errors.weight && <span className="pt-field-error">{errors.weight}</span>}
               </label>
             </div>
@@ -170,7 +245,7 @@ const HealthDataEntry = () => {
               <label className="pt-field">
                 <span className="pt-form-label">Glucose</span>
                 <div className="pt-input-unit">
-                  <input className="pt-input" type="number" placeholder="118" value={data.glucose} onChange={(e) => set("glucose", e.target.value)} />
+                  <input className="pt-input" type="number" min={0} placeholder="118" value={data.glucose} onChange={(e) => set("glucose", e.target.value)} />
                   <span>mg/dL</span>
                 </div>
                 {errors.glucose && <span className="pt-field-error">{errors.glucose}</span>}
@@ -178,9 +253,9 @@ const HealthDataEntry = () => {
               <label className="pt-field">
                 <span className="pt-form-label">Blood pressure</span>
                 <div className="pt-bp-row">
-                  <input className="pt-input" type="number" placeholder="Sys" value={data.systolic} onChange={(e) => set("systolic", e.target.value)} aria-label="Systolic" />
+                  <input className="pt-input" type="number" min={0} placeholder="Sys" value={data.systolic} onChange={(e) => set("systolic", e.target.value)} aria-label="Systolic" />
                   <span>/</span>
-                  <input className="pt-input" type="number" placeholder="Dia" value={data.diastolic} onChange={(e) => set("diastolic", e.target.value)} aria-label="Diastolic" />
+                  <input className="pt-input" type="number" min={0} placeholder="Dia" value={data.diastolic} onChange={(e) => set("diastolic", e.target.value)} aria-label="Diastolic" />
                 </div>
                 {errors.systolic && <span className="pt-field-error">{errors.systolic}</span>}
                 {errors.diastolic && <span className="pt-field-error">{errors.diastolic}</span>}
@@ -201,7 +276,7 @@ const HealthDataEntry = () => {
               </label>
               <label className="pt-field">
                 <span className="pt-form-label">Hours ago</span>
-                <input className="pt-input" type="number" placeholder="3" value={data.mealHoursAgo} onChange={(e) => set("mealHoursAgo", e.target.value)} />
+                <input className="pt-input" type="number" min={0} placeholder="3" value={data.mealHoursAgo} onChange={(e) => set("mealHoursAgo", e.target.value)} />
                 {errors.mealHoursAgo && <span className="pt-field-error">{errors.mealHoursAgo}</span>}
               </label>
             </div>
@@ -226,8 +301,16 @@ const HealthDataEntry = () => {
               </div>
             )}
 
-            <p className="pt-vitals-hint">Tap common symptoms or add your own below.</p>
+            <p className="pt-vitals-hint">Tap a symptom, choose “No symptoms” if you feel fine, or add your own below.</p>
             <div className="pt-symptom-presets">
+              <button
+                type="button"
+                className={`pt-symptom-preset pt-symptom-preset--none${data.symptoms.includes(NO_SYMPTOMS_LABEL) ? " is-selected" : ""}`}
+                onClick={() => toggleSymptom(NO_SYMPTOMS_LABEL)}
+                aria-pressed={data.symptoms.includes(NO_SYMPTOMS_LABEL)}
+              >
+                {NO_SYMPTOMS_LABEL}
+              </button>
               {PRESET_SYMPTOMS.map((s) => (
                 <button
                   key={s}
@@ -235,6 +318,7 @@ const HealthDataEntry = () => {
                   className={`pt-symptom-preset${data.symptoms.includes(s) ? " is-selected" : ""}`}
                   onClick={() => toggleSymptom(s)}
                   aria-pressed={data.symptoms.includes(s)}
+                  disabled={symptomsLocked}
                 >
                   {s}
                 </button>
@@ -255,8 +339,15 @@ const HealthDataEntry = () => {
                   }
                 }}
                 aria-label="Custom symptom"
+                disabled={symptomsLocked}
               />
-              <button type="button" className="pt-custom-symptom-add" onClick={addCustomSymptom} aria-label="Add custom symptom">
+              <button
+                type="button"
+                className="pt-custom-symptom-add"
+                onClick={addCustomSymptom}
+                aria-label="Add custom symptom"
+                disabled={symptomsLocked}
+              >
                 <HiOutlinePlus />
                 Add
               </button>
