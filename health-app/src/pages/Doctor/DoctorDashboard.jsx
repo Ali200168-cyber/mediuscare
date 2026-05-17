@@ -105,11 +105,11 @@ export default function DoctorDashboard() {
         <header className="dh-hero">
           <div>
             <p className="dh-hero-kicker">{greeting()}</p>
-            <h2 className="dh-hero-title">Your practice command center</h2>
+            <h2 className="dh-hero-title">Your clinical overview</h2>
             <p className="dh-hero-sub">
               {loading
-                ? "Loading workspace…"
-                : `${patients.length} patients · ${todayVisits.length} visits today · ${priorityPatients.length} need attention`}
+                ? "Loading your dashboard…"
+                : `${patients.length} assigned patient${patients.length === 1 ? "" : "s"} · ${todayVisits.length} appointment${todayVisits.length === 1 ? "" : "s"} today · ${priorityPatients.length} flagged for review`}
             </p>
           </div>
           {pendingAi > 0 && (

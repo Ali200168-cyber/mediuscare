@@ -1329,7 +1329,7 @@
   color: var(--md-text-2);
 }
 
-/* —— Home command center (dh) —— */
+/* —— Doctor home dashboard (dh) —— */
 .dh-page { display: flex; flex-direction: column; gap: 24px; }
 
 .dh-hero {

@@ -25,7 +25,7 @@ const NAV = [
 ];
 
 const PAGE_META = {
-  "/doctor/dashboard": { title: "Command Center", desc: "Today at a glance" },
+  "/doctor/dashboard": { title: "Dashboard", desc: "Daily summary" },
   "/doctor/patient-monitoring": { title: "Patients", desc: "Vitals & monitoring" },
   "/doctor/assignment-requests": { title: "Inbox", desc: "New assignments" },
   "/doctor/requests": { title: "Schedule", desc: "Visits & consultations" },
