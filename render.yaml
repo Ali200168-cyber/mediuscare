@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: medius9-backend
+    env: node
+    plan: free
+    rootDir: health-app/backend
+    buildCommand: npm ci
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: PORT
+        value: 5000

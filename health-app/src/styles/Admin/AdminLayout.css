@@ -1,0 +1,143 @@
+.ad-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.ad-sidebar {
+  background: linear-gradient(180deg, #0a0e17 0%, #111827 55%, #0f172a 100%);
+  border-right: 1px solid rgba(6, 182, 212, 0.15);
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.ad-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ad-brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--ad-cyan), #0891b2);
+  color: #0a0e17;
+  font-family: var(--ad-display);
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.35);
+}
+
+.ad-brand-text strong {
+  display: block;
+  font-family: var(--ad-display);
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.ad-brand-text span {
+  font-size: 0.72rem;
+  color: var(--ad-cyan);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ad-sidebar-tag {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ad-sidebar-text);
+  opacity: 0.85;
+}
+
+.ad-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.ad-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--ad-sidebar-text);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ad-nav-link svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  opacity: 0.85;
+}
+
+.ad-nav-link:hover {
+  background: rgba(6, 182, 212, 0.08);
+  color: #f1f5f9;
+}
+
+.ad-nav-link.is-active {
+  background: rgba(6, 182, 212, 0.14);
+  border-color: rgba(6, 182, 212, 0.25);
+  color: #fff;
+}
+
+.ad-sidebar-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.ad-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.08);
+  color: #fda4af;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.ad-main {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.06), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(16, 185, 129, 0.05), transparent 35%),
+    #eef2f7;
+  padding: 28px 32px 48px;
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .ad-layout {
+    grid-template-columns: 1fr;
+  }
+  .ad-sidebar {
+    position: relative;
+    height: auto;
+  }
+}

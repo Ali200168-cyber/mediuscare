@@ -1,0 +1,57 @@
+.patient-alerts-page {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid #dbe7f5;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: var(--mc-shadow);
+  transition: transform var(--mc-ease), box-shadow var(--mc-ease), border-color var(--mc-ease);
+}
+
+.patient-alerts-page:hover {
+  transform: translateY(-1px);
+  border-color: #c7dcf8;
+  box-shadow: 0 18px 32px rgba(42, 127, 255, 0.12);
+}
+.patient-alerts-page .history-item {
+  margin-top: 10px;
+}
+
+.alerts-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.alerts-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.alerts-tabs button {
+  border: 1px solid #cfe0f7;
+  border-radius: 10px;
+  background: #f8fbff;
+  color: #1d4e89;
+  padding: 8px 12px;
+  box-shadow: none;
+}
+
+.alerts-tabs button.active {
+  background: linear-gradient(135deg, var(--mc-primary), #3b82f6);
+  color: #fff;
+}
+.patient-alerts-page button {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--mc-primary), #3b82f6);
+  color: #fff;
+  padding: 9px 13px;
+  box-shadow: 0 10px 18px rgba(42, 127, 255, 0.24);
+}
+
+.patient-alerts-page button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(42, 127, 255, 0.3);
+}

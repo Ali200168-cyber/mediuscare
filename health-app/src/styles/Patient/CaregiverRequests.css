@@ -1,0 +1,125 @@
+.patient-caregiver-requests {
+  max-width: 1020px;
+  margin: 8px auto;
+  padding: 8px;
+}
+
+.patient-caregiver-requests h1 {
+  margin: 0;
+  color: #0b2d5c;
+}
+
+.patient-caregiver-requests > p {
+  margin: 8px 0 12px;
+  color: #475569;
+}
+
+.pcg-error,
+.pcg-status {
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.pcg-error {
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+
+.pcg-status {
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+}
+
+.pcg-empty {
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 18px;
+  background: #fff;
+}
+
+.pcg-empty h3 {
+  margin: 0 0 6px;
+}
+
+.pcg-empty p {
+  margin: 0;
+  color: #64748b;
+}
+
+.pcg-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pcg-item {
+  border: 1px solid #dbe7f5;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.pcg-main {
+  display: grid;
+  gap: 4px;
+}
+
+.pcg-main span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.pcg-badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pcg-badge.pending { background: #fff7ed; color: #b45309; }
+.pcg-badge.approved { background: #ecfdf5; color: #047857; }
+.pcg-badge.rejected { background: #fef2f2; color: #b91c1c; }
+
+.pcg-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pcg-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pcg-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pcg-actions .approve {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.pcg-actions .reject {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+@media (max-width: 700px) {
+  .pcg-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

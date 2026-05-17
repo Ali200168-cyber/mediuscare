@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+
+.env
+.env.local
+.env.production
+backend/.env
+
+# Build output
+dist/
+dist-ssr
+*.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+ai-service/__pycache__/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

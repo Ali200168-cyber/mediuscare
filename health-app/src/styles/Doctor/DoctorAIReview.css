@@ -1,0 +1,926 @@
+/* Doctor AI Review (Clinical Decision Support) */
+
+.aiReview {
+  font-family: "Inter", "Poppins", system-ui, -apple-system, Segoe UI, sans-serif;
+  color: #0b1220;
+}
+
+.aiFlow {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+}
+
+.aiStepCard {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.aiDecisionCard {
+  position: static;
+  z-index: auto;
+}
+
+.aiShell {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr) minmax(0, 360px);
+  gap: 14px;
+  align-items: start;
+}
+
+.aiTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.aiTopbarTitle {
+  display: grid;
+  gap: 4px;
+}
+
+.aiTopbarHeading {
+  font-size: 1.25rem;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: #0b2d5c;
+}
+
+.aiTopbarSub {
+  color: #51607a;
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.aiTopbarActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.aiBtn {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.8);
+  color: #0b2d5c;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.aiBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.aiBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.aiBtnPrimary {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.22);
+}
+
+.aiBtnOutline {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.aiBtnGhost {
+  background: transparent;
+}
+
+.aiBtnApprove {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.aiBtnReject {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.aiBanner {
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 850;
+  margin: 10px 0 12px;
+}
+
+.aiBannerError {
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+
+.aiToast {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  font-weight: 850;
+}
+
+.aiToast.success {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #047857;
+}
+
+.aiToast.error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
+
+.aiKpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin: 12px 0 14px;
+}
+
+.aiKpi {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  padding: 12px;
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.aiKpi span {
+  display: block;
+  color: #64748b;
+  font-weight: 850;
+  font-size: 0.82rem;
+}
+
+.aiKpi strong {
+  display: block;
+  margin-top: 3px;
+  font-weight: 950;
+  font-size: 1.2rem;
+  color: #0b1220;
+}
+
+.aiLayout { display: none; }
+
+.aiSectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.aiSectionHead h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.aiSectionHead span {
+  color: #51607a;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.aiSectionIntro {
+  margin: -2px 0 12px;
+  color: #5b6b84;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.aiPatientGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.aiPatientCard {
+  text-align: left;
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.aiPatientCard:hover {
+  transform: none;
+  background: rgba(248, 251, 255, 0.95);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.aiPatientCard.isActive {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(239, 246, 255, 0.95);
+}
+
+.aiPatientCard.tone-normal { border-left: 6px solid rgba(16, 185, 129, 0.65); }
+.aiPatientCard.tone-warning { border-left: 6px solid rgba(245, 158, 11, 0.7); }
+.aiPatientCard.tone-critical { border-left: 6px solid rgba(239, 68, 68, 0.7); }
+
+.aiPatientTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.aiPatientName {
+  font-weight: 950;
+  letter-spacing: -0.01em;
+}
+
+.aiPatientMeta {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.aiPatientSummary {
+  font-weight: 900;
+  color: #334155;
+}
+
+.aiPatientTime {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.aiPill {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.aiPill.tone-normal { background: rgba(16, 185, 129, 0.12); color: #047857; border-color: rgba(16, 185, 129, 0.22); }
+.aiPill.tone-warning { background: rgba(245, 158, 11, 0.12); color: #b45309; border-color: rgba(245, 158, 11, 0.25); }
+.aiPill.tone-critical { background: rgba(239, 68, 68, 0.12); color: #b91c1c; border-color: rgba(239, 68, 68, 0.25); }
+
+.aiDetailCard {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.aiDetailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.aiDetailTitle {
+  font-weight: 950;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.aiDetailSub {
+  margin-top: 6px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.aiTiny {
+  color: #64748b;
+  font-weight: 850;
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.aiSplit {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 12px;
+}
+
+.aiCol {
+  display: grid;
+  gap: 12px;
+}
+
+.aiCard {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.aiCardAccent {
+  border-left: 6px solid rgba(37, 99, 235, 0.35);
+}
+
+.aiCardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.aiCardHead h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.aiMeta {
+  color: #64748b;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.aiTag {
+  font-weight: 950;
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.aiGrid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.aiMini {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  padding: 10px;
+  background: #fff;
+}
+
+.aiMini span {
+  display: block;
+  color: #64748b;
+  font-weight: 850;
+  font-size: 0.82rem;
+}
+
+.aiMini strong {
+  display: block;
+  margin-top: 3px;
+  font-weight: 950;
+}
+
+.aiMuted {
+  margin-top: 10px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.aiChart {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  padding: 10px;
+}
+
+.aiFoot {
+  margin-top: 6px;
+  color: #64748b;
+  font-weight: 800;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.aiSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #334155;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.aiReviewProgress {
+  margin-bottom: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.aiReviewProgressRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #334155;
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.aiDoseBox {
+  margin-bottom: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.24);
+  border-radius: 12px;
+  background: rgba(239, 246, 255, 0.9);
+  padding: 10px;
+}
+
+.aiDoseLabel {
+  color: #1e3a8a;
+  font-weight: 900;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.aiDoseValue {
+  margin-top: 2px;
+  color: #0f172a;
+  font-weight: 950;
+  font-size: 1.15rem;
+}
+
+.aiDoseHint {
+  margin-top: 5px;
+  color: #334155;
+  font-weight: 800;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.aiClinicalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.aiClinicalCard {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+.aiClinicalCard h3 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: #0b2d5c;
+}
+
+.aiClinicalCard p {
+  margin: 0;
+  color: #334155;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.aiClinicalCard ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #334155;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.aiExplain {
+  margin-top: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  padding: 10px;
+  background: #fff;
+}
+
+.aiExplainTitle {
+  font-weight: 950;
+  color: #0b2d5c;
+  margin-bottom: 6px;
+}
+
+.aiExplainBody {
+  color: #334155;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.aiDecision {
+  margin-top: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px;
+  position: sticky;
+  top: 14px;
+}
+
+.aiDecisionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.aiDecisionHead h4 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.aiTextarea {
+  width: 100%;
+  min-height: 86px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 12px;
+  font-weight: 800;
+  resize: vertical;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.aiTextareaSoft {
+  margin-top: 10px;
+  min-height: 70px;
+  background: rgba(248, 251, 255, 0.9);
+}
+
+.aiTextarea:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.aiDecisionActions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aiDecisionActionsWide .aiBtn {
+  flex: 1;
+  min-width: 140px;
+}
+
+.aiDecisionActionsWide .aiBtn:focus-visible,
+.aiBtn:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.aiFinePrint {
+  margin-top: 8px;
+  color: #64748b;
+  font-weight: 800;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.aiWorkGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  gap: 12px;
+  margin-top: 10px;
+  align-items: start;
+}
+
+.aiWorkLeft,
+.aiWorkRight {
+  display: grid;
+  gap: 12px;
+}
+
+.aiContextCard {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: #fff;
+  padding: 12px;
+}
+
+.aiContextHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.aiContextHead h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0b2d5c;
+}
+
+.aiContextMeta {
+  color: #64748b;
+  font-weight: 850;
+  font-size: 0.82rem;
+}
+
+.aiContextPill {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(248, 251, 255, 0.95);
+}
+
+.aiContextBody {
+  display: grid;
+  gap: 10px;
+}
+
+.aiContextRow2 {
+  display: grid;
+  gap: 4px;
+}
+
+.aiContextLabel {
+  color: #51607a;
+  font-weight: 900;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.aiContextText {
+  color: #334155;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.aiChecklist2 {
+  margin: 0;
+  padding-left: 18px;
+  color: #334155;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.aiRecoBar {
+  margin-top: 10px;
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  background: rgba(239, 246, 255, 0.75);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.aiRecoTitle {
+  color: #1e3a8a;
+  font-weight: 950;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  margin-bottom: 6px;
+}
+
+.aiRecoText2 {
+  color: #334155;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.aiDecisionPanel2 {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 251, 255, 0.92));
+  padding: 12px;
+  position: sticky;
+  top: 14px;
+}
+
+.aiDoseBoxStrong {
+  border-color: rgba(37, 99, 235, 0.28);
+  background: rgba(239, 246, 255, 0.95);
+}
+
+.aiField2 {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.aiField2Label {
+  color: #334155;
+  font-weight: 900;
+  font-size: 0.86rem;
+}
+
+
+.aiRiskBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: #fff;
+}
+
+.aiRiskBanner strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+}
+
+.aiRiskBanner.tone-normal { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2); }
+.aiRiskBanner.tone-warning { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.24); }
+.aiRiskBanner.tone-critical { background: rgba(239, 68, 68, 0.09); border-color: rgba(239, 68, 68, 0.24); }
+
+.aiBullets {
+  margin: 0;
+  padding-left: 20px;
+  color: #334155;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.aiChecklist {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.aiChecklist label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-weight: 800;
+}
+
+.aiRecoText {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  padding: 10px;
+  color: #334155;
+  font-weight: 800;
+  background: #fff;
+}
+
+.aiAlertsBlock {
+  margin-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  padding-top: 10px;
+}
+
+.aiAlerts {
+  display: grid;
+  gap: 10px;
+}
+
+.aiAlert {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.aiAlert::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.aiAlert.tone-normal::before { background: rgba(16, 185, 129, 0.7); }
+.aiAlert.tone-warning::before { background: rgba(245, 158, 11, 0.75); }
+.aiAlert.tone-critical::before { background: rgba(239, 68, 68, 0.75); }
+
+.aiAlertTitle {
+  font-weight: 950;
+  color: #0b1220;
+}
+
+.aiAlertText {
+  margin-top: 4px;
+  color: #334155;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.aiEmpty,
+.aiEmptyInline {
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  border-radius: 18px;
+  padding: 22px;
+  text-align: center;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.aiEmpty h3 {
+  margin: 0 0 6px;
+  color: #0b1220;
+}
+
+.aiEmptyInline {
+  text-align: left;
+  display: grid;
+  gap: 4px;
+}
+
+.aiSkel {
+  min-height: 120px;
+  background: #edf3fb;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.aiSkel::after,
+.aiSkelLine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: aiShimmer 1.5s infinite;
+}
+
+.aiSkelLineStack {
+  display: grid;
+  gap: 10px;
+}
+
+.aiSkelLine {
+  height: 14px;
+  border-radius: 10px;
+  background: #edf3fb;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes aiShimmer {
+  100% { transform: translateX(100%); }
+}
+
+.tone-normal { color: #047857; }
+.tone-warning { color: #b45309; }
+.tone-critical { color: #b91c1c; }
+
+@media (max-width: 900px) {
+  .aiGrid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .aiWorkGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .aiClinicalGrid { grid-template-columns: 1fr; }
+}

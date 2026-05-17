@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@600;700;800&display=swap");
+
+:root {
+  --ad-font: "DM Sans", system-ui, sans-serif;
+  --ad-display: "Syne", "DM Sans", sans-serif;
+  --ad-bg: #0a0e17;
+  --ad-bg-elevated: #111827;
+  --ad-surface: #ffffff;
+  --ad-surface-2: #f8fafc;
+  --ad-border: rgba(148, 163, 184, 0.22);
+  --ad-border-strong: rgba(6, 182, 212, 0.35);
+  --ad-text: #0f172a;
+  --ad-text-2: #475569;
+  --ad-text-3: #94a3b8;
+  --ad-sidebar-text: #cbd5e1;
+  --ad-cyan: #06b6d4;
+  --ad-cyan-soft: rgba(6, 182, 212, 0.12);
+  --ad-amber: #f59e0b;
+  --ad-rose: #f43f5e;
+  --ad-emerald: #10b981;
+  --ad-radius: 14px;
+  --ad-radius-lg: 20px;
+  --ad-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+  --ad-shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.14);
+}
+
+.ad-app {
+  font-family: var(--ad-font);
+  color: var(--ad-text);
+  min-height: 100vh;
+}

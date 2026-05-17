@@ -1,0 +1,125 @@
+:root {
+  --mc-primary: #2563eb;
+  --mc-primary-dark: #1d4ed8;
+  --mc-secondary: #16a34a;
+  --mc-bg: #f6f9ff;
+  --mc-bg-soft: #f8fbff;
+  --mc-surface: #ffffff;
+  --mc-border: #dbe7f5;
+  --mc-text: #0f172a;
+  --mc-subtext: #475569;
+  --mc-danger: #e74c3c;
+  --mc-warning: #f39c12;
+  --mc-radius: 16px;
+  --mc-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  --mc-ease: 180ms ease;
+  --mc-ease-slow: 260ms ease;
+  font-family: "Inter", "Poppins", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+html {
+  background-color: var(--mc-bg);
+}
+
+body,
+#root {
+  color: var(--mc-text);
+}
+
+#root {
+  background: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  transition: transform var(--mc-ease), box-shadow var(--mc-ease), background var(--mc-ease), opacity var(--mc-ease);
+}
+
+button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.empty-state {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px dashed #cbdcf1;
+  border-radius: var(--mc-radius);
+  padding: 18px;
+  text-align: center;
+  color: var(--mc-subtext);
+}
+
+.empty-state h3 {
+  margin: 0 0 6px;
+  color: var(--mc-primary-dark);
+  font-size: 1.05rem;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.skeleton-grid {
+  gap: 12px;
+}
+
+.mc-glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(203, 220, 241, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--mc-shadow);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .mc-glass-panel {
+    background: var(--mc-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.skeleton-card {
+  min-height: 120px;
+  background: linear-gradient(90deg, #f0f6ff 25%, #e2eeff 37%, #f0f6ff 63%);
+  background-size: 400% 100%;
+  animation: mcSkeleton 1.2s ease infinite;
+  border: 1px solid var(--mc-border);
+}
+
+@keyframes mcSkeleton {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}

@@ -1,0 +1,188 @@
+import { useCallback, useRef, useState } from "react";
+import {
+  HiOutlineArrowUpTray,
+  HiOutlineDocument,
+  HiOutlinePhoto,
+  HiOutlineTrash,
+} from "react-icons/hi2";
+import { PtBadge } from "./PatientUI";
+import { patientFetch } from "./patientApi";
+import { API_URL } from "../../config/api";
+
+const CATEGORIES = [
+  { id: "lab", label: "Lab results" },
+  { id: "imaging", label: "Imaging" },
+  { id: "prescription", label: "Prescription" },
+  { id: "other", label: "Other" },
+];
+
+const formatSize = (bytes) => {
+  if (!bytes) return "—";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const fileIcon = (mime = "") => (mime.startsWith("image/") ? HiOutlinePhoto : HiOutlineDocument);
+
+export default function ReportUploadPanel({ files, onChange, onError }) {
+  const inputRef = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  const [category, setCategory] = useState("lab");
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [queue, setQueue] = useState([]);
+
+  const uploadOne = async (file) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("category", category);
+    const res = await patientFetch("/api/reports/patient/files", { method: "POST", body: form });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || "Upload failed");
+    return data.file;
+  };
+
+  const processFiles = async (fileList) => {
+    const list = Array.from(fileList || []);
+    if (!list.length) return;
+    setUploading(true);
+    setQueue(list.map((f) => ({ name: f.name, status: "pending" })));
+    const added = [];
+    try {
+      for (let i = 0; i < list.length; i++) {
+        setProgress(Math.round(((i + 0.2) / list.length) * 100));
+        setQueue((q) => q.map((item, idx) => (idx === i ? { ...item, status: "uploading" } : item)));
+        const uploaded = await uploadOne(list[i]);
+        added.push(uploaded);
+        setQueue((q) => q.map((item, idx) => (idx === i ? { ...item, status: "done" } : item)));
+        setProgress(Math.round(((i + 1) / list.length) * 100));
+      }
+      onChange?.([...added, ...files]);
+    } catch (err) {
+      onError?.(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      setTimeout(() => {
+        setProgress(0);
+        setQueue([]);
+      }, 800);
+    }
+  };
+
+  const onDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      setDragging(false);
+      processFiles(e.dataTransfer.files);
+    },
+    [category, files],
+  );
+
+  const removeFile = async (id) => {
+    try {
+      const res = await patientFetch(`/api/reports/patient/files/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "Delete failed");
+      onChange?.(files.filter((f) => f.id !== id));
+    } catch (err) {
+      onError?.(err.message || "Could not delete file");
+    }
+  };
+
+  return (
+    <motion className="pt-reports-upload">
+      <div className="pt-reports-upload-controls">
+        <label className="pt-reports-filter">
+          <span>Category</span>
+          <select className="pt-select" value={category} onChange={(e) => setCategory(e.target.value)} disabled={uploading}>
+            {CATEGORIES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </motion>
+
+      <div
+        className={`pt-reports-dropzone${dragging ? " is-dragging" : ""}${uploading ? " is-uploading" : ""}`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        onClick={() => !uploading && inputRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        aria-label="Upload health documents"
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          hidden
+          multiple
+          accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.xls,.xlsx"
+          onChange={(e) => {
+            processFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+        <HiOutlineArrowUpTray className="pt-reports-dropzone-icon" aria-hidden />
+        <p className="pt-reports-dropzone-title">Drop files here or click to browse</p>
+        <p className="pt-reports-dropzone-hint">PDF, images, CSV, Excel · max 12 MB each</p>
+        {uploading && (
+          <div className="pt-reports-upload-progress">
+            <div className="pt-reports-upload-progress-bar" style={{ width: `${progress}%` }} />
+            <span>{progress}%</span>
+          </motion>
+        )}
+      </motion>
+
+      {queue.length > 0 && (
+        <ul className="pt-reports-upload-queue">
+          {queue.map((item) => (
+            <li key={item.name} className={`pt-reports-upload-queue-item is-${item.status}`}>
+              {item.name}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {files.length > 0 ? (
+        <div className="pt-reports-files-grid">
+          {files.map((file) => {
+            const Icon = fileIcon(file.mimeType);
+            const href = file.url?.startsWith("http") ? file.url : `${API_URL}${file.url}`;
+            return (
+              <article key={file.id} className="pt-reports-file-card">
+                <div className="pt-reports-file-icon">
+                  <Icon aria-hidden />
+                </div>
+                <div className="pt-reports-file-meta">
+                  <strong title={file.name}>{file.name}</strong>
+                  <span>
+                    {formatSize(file.size)} · {new Date(file.uploadedAt).toLocaleDateString()}
+                  </span>
+                  <PtBadge tone="neutral">{file.category}</PtBadge>
+                </motion>
+                <div className="pt-reports-file-actions">
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="pt-reports-file-link">
+                    Open
+                  </a>
+                  <button type="button" className="pt-reports-file-delete" onClick={() => removeFile(file.id)} aria-label={`Delete ${file.name}`}>
+                    <HiOutlineTrash />
+                  </button>
+                </motion>
+              </article>
+            );
+          })}
+        </motion>
+      ) : (
+        <p className="pt-reports-empty">No documents uploaded yet.</p>
+      )}
+    </motion>
+  );
+}
+

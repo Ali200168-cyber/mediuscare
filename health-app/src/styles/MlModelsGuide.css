@@ -1,0 +1,24 @@
+.ml-guide { margin: 1.5rem 0; }
+.ml-guide-head h3 { margin: 0 0 0.35rem; font-size: 1.15rem; }
+.ml-guide-head p { margin: 0; color: #64748b; font-size: 0.9rem; }
+.ml-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+}
+.ml-card {
+  border-radius: 14px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+.ml-card--glucose { border-top: 3px solid #2563eb; }
+.ml-card--bp { border-top: 3px solid #dc2626; }
+.ml-card--anomaly { border-top: 3px solid #d97706; }
+.ml-card-icon { font-size: 1.5rem; display: block; margin-bottom: 0.35rem; }
+.ml-card h4 { margin: 0 0 0.5rem; font-size: 0.95rem; }
+.ml-card dl { margin: 0; display: grid; gap: 0.35rem; }
+.ml-card dt { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; font-weight: 700; }
+.ml-card dd { margin: 0; font-size: 0.82rem; color: #334155; line-height: 1.35; }
+.ml-guide--compact .ml-guide-head { display: none; }
+.ml-guide--compact .ml-card { padding: 0.75rem; }

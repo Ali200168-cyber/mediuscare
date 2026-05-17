@@ -1,0 +1,359 @@
+.feedbackModule {
+  font-family: "Inter", "Poppins", system-ui, -apple-system, Segoe UI, sans-serif;
+  color: #0f172a;
+}
+
+.fbTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fbTopbarTitle h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  color: #0b2d5c;
+  letter-spacing: -0.02em;
+}
+
+.fbTopbarTitle p {
+  margin: 6px 0 0;
+  color: #51607a;
+  font-weight: 700;
+}
+
+.fbTopbarActions {
+  display: flex;
+  gap: 10px;
+}
+
+.fbBanner {
+  margin: 10px 0 12px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.fbBanner.error {
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+
+.fbBanner.success {
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+}
+
+.fbGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.fbCard {
+  border: 1px solid #dce8f5;
+  border-radius: 18px;
+  padding: 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.fbIntroText {
+  margin: -2px 0 12px;
+  color: #5b6b84;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.fbCardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.fbCardHead h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.fbCardHead span {
+  color: #51607a;
+  font-weight: 800;
+  font-size: 0.84rem;
+}
+
+.fbField {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.fbField label {
+  color: #334155;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.fbField input,
+.fbField select,
+.fbField textarea,
+.fbFilters input,
+.fbFilters select {
+  border: 1px solid #cfdced;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.93rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.fbField input:focus,
+.fbField select:focus,
+.fbField textarea:focus,
+.fbFilters input:focus,
+.fbFilters select:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.fbPatientPreview {
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: rgba(239, 246, 255, 0.9);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.fbPatientName {
+  color: #0b2d5c;
+  font-weight: 900;
+}
+
+.fbThreeCols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fbTwoCols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fbActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.fbActionHint {
+  margin-right: auto;
+  color: #5b6b84;
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.fbBtn {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.8);
+  color: #0b2d5c;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.fbBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.fbBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.fbBtnPrimary {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.fbBtnSecondary {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.fbBtnGhost {
+  background: transparent;
+}
+
+.fbFilters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.fbFiltersHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.fbFiltersTitle {
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.fbFiltersMeta {
+  color: #64748b;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.fbTimeline {
+  display: grid;
+  gap: 12px;
+}
+
+.fbTimelineGroup {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: #fff;
+  padding: 10px;
+}
+
+.fbTimelineTitle {
+  font-weight: 900;
+  color: #0b2d5c;
+  margin-bottom: 8px;
+}
+
+.fbTimelineItem {
+  border-top: 1px dashed rgba(148, 163, 184, 0.4);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.fbTimelineItem:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.fbTimelineHead {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.fbTimelineHead:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.fbTimelineDate {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.fbTimelineDiagnosis {
+  margin-top: 2px;
+  color: #334155;
+  font-weight: 900;
+}
+
+.fbTimelineBody {
+  margin-top: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 10px;
+}
+
+.fbTimelineBody p {
+  margin: 0 0 6px;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.fbTimelineBody p:last-child {
+  margin-bottom: 0;
+}
+
+.fbStatus {
+  align-self: start;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-weight: 900;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.fbStatus.draft {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.fbStatus.submitted {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.fbEmpty {
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.fbEmpty h3 {
+  margin: 0 0 6px;
+  color: #0f172a;
+}
+
+.fbMuted {
+  color: #64748b;
+  font-weight: 800;
+}
+
+@media (max-width: 1080px) {
+  .fbGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 840px) {
+  .fbThreeCols,
+  .fbTwoCols,
+  .fbFilters {
+    grid-template-columns: 1fr;
+  }
+}

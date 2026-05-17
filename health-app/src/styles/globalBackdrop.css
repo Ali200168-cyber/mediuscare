@@ -1,0 +1,38 @@
+/**
+ * Full-viewport photographic backdrop + readable overlay.
+ * Base image matches MEDIA.backdrop in src/config/mediaAssets.js
+ */
+@media (prefers-reduced-data: reduce) {
+  body {
+    background-image: none !important;
+    background-color: var(--mc-bg-soft) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    background-attachment: scroll !important;
+  }
+}
+
+body {
+  background-color: #e5edf8;
+  background-image:
+    linear-gradient(
+      168deg,
+      rgba(249, 250, 252, 0.93) 0%,
+      rgba(239, 246, 255, 0.86) 38%,
+      rgba(236, 247, 250, 0.9) 72%,
+      rgba(249, 250, 252, 0.94) 100%
+    ),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.1)),
+    url("https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2400&q=78");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
+
+#root {
+  background: transparent;
+}

@@ -1,0 +1,197 @@
+.cg-app.cgLayout {
+  min-height: 100vh;
+  display: flex;
+  background: var(--cg-bg-pattern);
+}
+
+.cg-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--cg-sidebar-w);
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px 18px;
+  background:
+    linear-gradient(165deg, #2e1065 0%, #4c1d95 38%, #5b21b6 70%, #3b0764 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 8px 0 40px rgba(59, 7, 100, 0.25);
+}
+
+.cg-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.cg-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 4px 6px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cg-brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-family: var(--cg-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #f472b6, #a855f7);
+  box-shadow: 0 8px 20px rgba(244, 114, 182, 0.35);
+}
+
+.cg-brand-text strong {
+  display: block;
+  font-family: var(--cg-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.cg-brand-text span {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #e9d5ff;
+  margin-top: 2px;
+}
+
+.cg-sidebar-tag {
+  position: relative;
+  margin: 0 6px 16px;
+  padding: 10px 12px;
+  border-radius: var(--cg-radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #ddd6fe;
+}
+
+.cg-nav {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.cg-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--cg-radius-sm);
+  text-decoration: none;
+  color: #e9d5ff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  transition: background var(--cg-ease), color var(--cg-ease), transform var(--cg-ease);
+}
+
+.cg-nav-link svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.cg-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.cg-nav-link.is-active {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.35), rgba(168, 85, 247, 0.45));
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.cg-nav-link.is-active svg {
+  opacity: 1;
+}
+
+.cg-sidebar-foot {
+  position: relative;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cg-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: var(--cg-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.15);
+  color: #fce7f3;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background var(--cg-ease), border-color var(--cg-ease);
+}
+
+.cg-logout:hover {
+  background: rgba(225, 29, 72, 0.25);
+  border-color: rgba(251, 113, 133, 0.4);
+  color: #fff;
+}
+
+.cg-main {
+  margin-left: var(--cg-sidebar-w);
+  width: calc(100% - var(--cg-sidebar-w));
+  min-height: 100vh;
+  padding: 28px 32px 40px;
+}
+
+@media (max-width: 960px) {
+  .cg-app.cgLayout {
+    flex-direction: column;
+  }
+
+  .cg-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+
+  .cg-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .cg-nav-link {
+    flex: 1 1 140px;
+  }
+
+  .cg-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 20px 16px 32px;
+  }
+}
