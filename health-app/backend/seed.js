@@ -1,10 +1,10 @@
 /**
- * One-time demo seed for assigned patient / doctor / caregiver accounts.
- * Run: npm run seed   (from backend/)
- * Does not modify users or delete existing data.
+ * Committee demo: creates 3 linked accounts + ~15 days of sample data.
+ * Run from backend/:  npm run seed
  */
 require("dotenv").config();
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const User = require("./models/User");
 const HealthEntry = require("./models/HealthEntry");
@@ -14,15 +14,51 @@ const DoctorFeedback = require("./models/DoctorFeedback");
 const Consultation = require("./models/Consultation");
 const ChatMessage = require("./models/ChatMessage");
 const CaregiverDoctorMessage = require("./models/CaregiverDoctorMessage");
+const CaregiverRequest = require("./models/CaregiverRequest");
 
-/** Demo window: last ~15 days (half month) */
 const DEMO_DAYS = 15;
-const SEED_TAG = "chali-demo-v2-halfmonth";
+const SEED_TAG = "committee-demo-v1";
+const FORECAST_SEED_TAG = "committee-demo-forecast";
+const DEMO_PASSWORD = "Demo1234!";
 
-const EMAILS = {
-  patient: "chali200168@gmail.com",
-  doctor: "chali200169@gmail.com",
-  caregiver: "chali200172@gmail.com",
+/** Smooth 6–24h forecast curve for demo charts (mg/dL). */
+const DEMO_GLUCOSE_FORECAST_SERIES = [
+  { hour: 4, glucose: 118 },
+  { hour: 8, glucose: 124 },
+  { hour: 12, glucose: 131 },
+  { hour: 16, glucose: 127 },
+  { hour: 20, glucose: 121 },
+  { hour: 24, glucose: 116 },
+];
+
+/** Two readings per day (fasting AM + post-meal PM) for a rich trend line. */
+const GLUCOSE_TREND_DAYS = [
+  { d: 14, am: 96, pm: 128, sys: 116, dia: 74, w: 78.3 },
+  { d: 13, am: 99, pm: 142, sys: 118, dia: 76, w: 78.2 },
+  { d: 12, am: 94, pm: 155, sys: 122, dia: 80, w: 78.1 },
+  { d: 11, am: 101, pm: 134, sys: 120, dia: 78, w: 77.9 },
+  { d: 10, am: 97, pm: 148, sys: 126, dia: 82, w: 78.0 },
+  { d: 9, am: 103, pm: 172, sys: 134, dia: 86, w: 78.2 },
+  { d: 8, am: 100, pm: 146, sys: 124, dia: 80, w: 77.8 },
+  { d: 7, am: 95, pm: 162, sys: 132, dia: 88, w: 78.1 },
+  { d: 6, am: 92, pm: 118, sys: 118, dia: 76, w: 77.6 },
+  { d: 5, am: 94, pm: 168, sys: 136, dia: 87, w: 78.0 },
+  { d: 4, am: 98, pm: 152, sys: 128, dia: 84, w: 78.2 },
+  { d: 3, am: 101, pm: 172, sys: 138, dia: 88, w: 78.3 },
+  { d: 2, am: 104, pm: 128, sys: 120, dia: 77, w: 77.7 },
+  { d: 1, am: 98, pm: 118, sys: 118, dia: 76, w: 77.6 },
+  { d: 0, am: 102, pm: 115, sys: 116, dia: 75, w: 77.5 },
+];
+
+const ACCOUNTS = {
+  patient: { email: "patient1@gmail.com", name: "Alex Morgan", role: "patient" },
+  doctor: {
+    email: "doctor1@gmail.com",
+    name: "Dr. Sarah Chen",
+    role: "doctor",
+    specialization: "Endocrinology",
+  },
+  caregiver: { email: "caregiver1@gmail.com", name: "Jordan Lee", role: "caregiver" },
 };
 
 const daysAgo = (n, hour = 10, minute = 0) => {
@@ -54,10 +90,50 @@ async function connect() {
   throw lastError || new Error("Could not connect to MongoDB");
 }
 
-async function findUserByEmail(email, role) {
-  const user = await User.findOne({ email: email.toLowerCase().trim(), role });
-  if (!user) throw new Error(`User not found: ${role} → ${email}`);
-  return user;
+async function upsertAccount({ name, email, role, extra = {} }) {
+  const normalized = email.toLowerCase().trim();
+  const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  let user = await User.findOne({ email: normalized });
+
+  if (user) {
+    user.name = name;
+    user.password = hash;
+    user.role = role;
+    user.isActive = true;
+    Object.assign(user, extra);
+    await user.save();
+    return { user, created: false };
+  }
+
+  user = await User.create({
+    name,
+    email: normalized,
+    password: hash,
+    role,
+    isActive: true,
+    ...extra,
+  });
+  return { user, created: true };
+}
+
+async function linkAccounts(patient, doctor, caregiver) {
+  patient.assignedDoctor = doctor._id;
+  const linked = new Set((patient.linkedCaregiverIds || []).map(String));
+  linked.add(String(caregiver._id));
+  patient.linkedCaregiverIds = [...linked].map((id) => new mongoose.Types.ObjectId(id));
+  await patient.save();
+
+  await CaregiverRequest.findOneAndUpdate(
+    { caregiverId: caregiver._id, patientId: patient._id },
+    {
+      $set: {
+        status: "Approved",
+        decisionAt: new Date(),
+        message: "Committee demo — accounts linked automatically.",
+      },
+    },
+    { upsert: true, new: true },
+  );
 }
 
 async function seedAlreadyRun(patientId) {
@@ -68,90 +144,156 @@ async function seedAlreadyRun(patientId) {
   return Boolean(marker);
 }
 
-function buildHealthEntries(patientId) {
-  // ~14 logs across the last 15 days (most days covered)
-  const specs = [
-    { days: 14, glucose: 98, sys: 118, dia: 76, weight: 78.2, symptoms: [], meal: "breakfast", mealH: 2 },
-    { days: 13, glucose: 132, sys: 124, dia: 80, weight: 78.0, symptoms: ["Fatigue"], meal: "lunch", mealH: 3 },
-    { days: 12, glucose: 155, sys: 134, dia: 86, weight: 77.9, symptoms: [], meal: "dinner", mealH: 1 },
-    { days: 11, glucose: 108, sys: 120, dia: 78, weight: 77.7, symptoms: [], meal: "breakfast", mealH: 4 },
-    { days: 10, glucose: 148, sys: 128, dia: 82, weight: 78.1, symptoms: ["Headache"], meal: "lunch", mealH: 2 },
-    { days: 9, glucose: 178, sys: 142, dia: 90, weight: 78.3, symptoms: ["Blurred Vision", "Dizziness"], meal: "dinner", mealH: 1 },
-    { days: 8, glucose: 102, sys: 116, dia: 74, weight: 77.6, symptoms: [], meal: "breakfast", mealH: 3 },
-    { days: 7, glucose: 162, sys: 136, dia: 88, weight: 78.2, symptoms: ["Nausea"], meal: "lunch", mealH: 2 },
-    { days: 6, glucose: 115, sys: 122, dia: 79, weight: 77.8, symptoms: [], meal: "dinner", mealH: 3 },
-    { days: 5, glucose: 94, sys: 112, dia: 72, weight: 77.5, symptoms: [], meal: "breakfast", mealH: 2 },
-    { days: 4, glucose: 168, sys: 138, dia: 87, weight: 78.0, symptoms: ["Fatigue"], meal: "lunch", mealH: 1 },
-    { days: 3, glucose: 172, sys: 140, dia: 90, weight: 78.4, symptoms: ["Headache"], meal: "dinner", mealH: 1 },
-    { days: 2, glucose: 110, sys: 118, dia: 76, weight: 77.7, symptoms: [], meal: "breakfast", mealH: 3 },
-    { days: 1, glucose: 118, sys: 120, dia: 78, weight: 77.6, symptoms: [], meal: "lunch", mealH: 2 },
-  ];
+async function forecastDemoAlreadyRun(patientId) {
+  const marker = await HealthEntry.findOne({
+    patient: patientId,
+    notes: { $regex: FORECAST_SEED_TAG },
+  }).select("_id");
+  return Boolean(marker);
+}
 
-  return specs.map((s, i) => {
-    const createdAt = daysAgo(s.days, 8 + (i % 4) * 2);
-    return {
-      patient: patientId,
-      age: 42,
-      gender: "male",
-      glucose: s.glucose,
-      fastingGlucose: s.meal === "breakfast" ? s.glucose : undefined,
-      postMealGlucose: s.meal !== "breakfast" ? s.glucose : undefined,
-      systolic: s.sys,
-      diastolic: s.dia,
-      weight: s.weight,
-      symptoms: s.symptoms,
-      mealRecords: [s.meal],
-      mealHoursAgo: s.mealH,
-      medicationHistory: ["Metformin 500mg daily"],
-      notes: `Demo vitals log #${i + 1}. Resting HR ~${72 + (i % 5) * 4} bpm. [${SEED_TAG}]`,
-      createdAt,
-      updatedAt: createdAt,
-    };
-  });
+function buildGlucoseTrendEntries(patientId, noteTag) {
+  const rows = [];
+  let seq = 0;
+  for (const day of GLUCOSE_TREND_DAYS) {
+    const slots = [
+      { glucose: day.am, meal: "breakfast", mealH: 4, hour: 7, symptoms: ["No symptoms"] },
+      {
+        glucose: day.pm,
+        meal: day.pm >= 160 ? "dinner" : "lunch",
+        mealH: 2,
+        hour: 19,
+        symptoms: day.pm >= 165 ? ["Fatigue"] : ["No symptoms"],
+      },
+    ];
+    for (const slot of slots) {
+      seq += 1;
+      const createdAt = daysAgo(day.d, slot.hour, 10 + (seq % 3) * 5);
+      rows.push({
+        patient: patientId,
+        age: 42,
+        gender: "male",
+        glucose: slot.glucose,
+        fastingGlucose: slot.meal === "breakfast" ? slot.glucose : undefined,
+        postMealGlucose: slot.meal !== "breakfast" ? slot.glucose : undefined,
+        systolic: day.sys,
+        diastolic: day.dia,
+        weight: day.w,
+        symptoms: slot.symptoms,
+        mealRecords: [slot.meal],
+        mealHoursAgo: slot.mealH,
+        medicationHistory: ["Metformin 500mg daily"],
+        notes: `Committee demo glucose trend #${seq}. [${noteTag}]${
+          noteTag === SEED_TAG ? ` [${FORECAST_SEED_TAG}]` : ""
+        }`,
+        createdAt,
+        updatedAt: createdAt,
+      });
+    }
+  }
+  return rows;
+}
+
+function buildHealthEntries(patientId) {
+  return buildGlucoseTrendEntries(patientId, SEED_TAG);
+}
+
+function buildForecastHealthEntries(patientId) {
+  return buildGlucoseTrendEntries(patientId, FORECAST_SEED_TAG);
+}
+
+function buildLatestForecastAiResult(patientId, doctorId) {
+  const createdAt = daysAgo(0, 15);
+  const currentGlucose = GLUCOSE_TREND_DAYS[GLUCOSE_TREND_DAYS.length - 1].pm;
+  return {
+    patient: patientId,
+    requestedBy: patientId,
+    source: "health_entries",
+    inputSummary: { seedTag: FORECAST_SEED_TAG, vitalsWindowDays: DEMO_DAYS },
+    safetyStatus: "validated",
+    success: true,
+    reason: "",
+    performance: { latencyMs: 380 },
+    reviewStatus: "approved",
+    reviewNotes: "Committee demo: glucose forecast snapshot for charts.",
+    reviewedBy: doctorId,
+    reviewedAt: createdAt,
+    alertsCount: 0,
+    output: [
+      {
+        module: "glucose_prediction_lstm",
+        risk_level: "Medium",
+        confidence_score: 0.86,
+        explanation: {
+          patient:
+            "Your glucose is expected to stay mostly stable over the next day, with a mild afternoon rise then settling by evening.",
+          doctor: "Demo forecast from dense 15-day glucose logs; suitable for committee chart walkthrough.",
+          key_factors: ["Meal timing", "Recent evening readings", "Metformin adherence"],
+        },
+        prediction: {
+          current_glucose: currentGlucose,
+          forecast_horizon_hours: 24,
+          predicted_series: DEMO_GLUCOSE_FORECAST_SERIES,
+          trend_curve: "Stable",
+          glucose_trend: "Stable",
+        },
+        recommendation: "Continue routine monitoring and meal logging.",
+        requires_doctor_approval: false,
+        alerts: [],
+      },
+      {
+        module: "smart_recommendation_system",
+        requires_doctor_approval: false,
+        recommendation: "Maintain current meal schedule; light walk after dinner if approved by your doctor.",
+        prediction: { suggested_dose_units: null },
+      },
+    ],
+    createdAt,
+    updatedAt: createdAt,
+  };
+}
+
+async function ensureForecastDemoData(patientId, doctorId) {
+  const added = { healthEntries: 0, aiSnapshot: 0 };
+
+  if (!(await forecastDemoAlreadyRun(patientId))) {
+    added.healthEntries = (await HealthEntry.insertMany(buildForecastHealthEntries(patientId))).length;
+  }
+
+  const hasForecastAi = await AiSimulationResult.findOne({
+    patient: patientId,
+    "inputSummary.seedTag": FORECAST_SEED_TAG,
+  }).select("_id");
+
+  if (!hasForecastAi) {
+    await AiSimulationResult.create(buildLatestForecastAiResult(patientId, doctorId));
+    added.aiSnapshot = 1;
+  }
+
+  return added;
 }
 
 function buildAiPredictions(patientId, doctorId) {
   const specs = [
-    {
-      days: 13,
-      risk: "Normal",
-      reviewStatus: "approved",
-      summary: "Glucose and BP within acceptable ranges for the past week.",
-      score: 0.22,
-      dose: null,
-    },
-    {
-      days: 10,
-      risk: "Elevated",
-      reviewStatus: "pending",
-      summary: "Post-meal glucose spikes detected; monitor carbohydrate intake.",
-      score: 0.58,
-      dose: null,
-    },
+    { days: 13, risk: "Normal", reviewStatus: "approved", summary: "Glucose and BP within acceptable ranges.", score: 0.22, dose: null },
+    { days: 10, risk: "Elevated", reviewStatus: "pending", summary: "Post-meal glucose spikes detected.", score: 0.58, dose: null },
     {
       days: 7,
       risk: "High",
       reviewStatus: "modified",
-      summary: "Sustained elevation after dinner readings; clinician review advised.",
+      summary: "Sustained elevation after dinner readings.",
       score: 0.81,
-      dose: "Discuss metformin timing — consider evening dose adjustment per protocol.",
+      dose: "Consider evening metformin timing adjustment.",
     },
     {
       days: 5,
       risk: "Elevated",
       reviewStatus: "rejected",
-      summary: "Model flagged irregular meal timing; insufficient data for dose change.",
+      summary: "Irregular meal timing flagged; more data needed.",
       score: 0.55,
-      dose: "Suggested 750mg — rejected pending more readings.",
+      dose: "Suggested dose change rejected pending review.",
     },
-    {
-      days: 2,
-      risk: "Normal",
-      reviewStatus: "approved",
-      summary: "Recent BP improved; glucose trending down after dietary changes.",
-      score: 0.28,
-      dose: null,
-    },
+    { days: 2, risk: "Normal", reviewStatus: "approved", summary: "BP improved; glucose trending down.", score: 0.28, dose: null },
   ];
 
   return specs.map((s) => {
@@ -167,28 +309,28 @@ function buildAiPredictions(patientId, doctorId) {
       reason: "",
       performance: { latencyMs: 420 },
       reviewStatus: s.reviewStatus,
-      reviewNotes: reviewed ? `Doctor review: ${s.reviewStatus} for demo.` : "",
+      reviewNotes: reviewed ? `Committee demo review: ${s.reviewStatus}.` : "",
       reviewedBy: reviewed ? doctorId : null,
       reviewedAt: reviewed ? createdAt : null,
       alertsCount: s.risk === "High" ? 2 : s.risk === "Elevated" ? 1 : 0,
       output: [
         {
-          module: "glucose_forecast",
+          module: "glucose_prediction_lstm",
           risk_level: s.risk,
-          confidence: 1 - s.score * 0.3,
-          explanation: {
-            summary: s.summary,
-            top_factors: ["Meal timing", "Recent glucose trend", "BP variability"],
-          },
+          confidence_score: 1 - s.score * 0.3,
+          explanation: { summary: s.summary, top_factors: ["Meal timing", "Glucose trend", "BP variability"] },
           prediction: {
             risk_score: s.score,
+            current_glucose: s.risk === "High" ? 172 : s.risk === "Elevated" ? 148 : 110,
             glucose_trend: s.risk === "Normal" ? "Stable" : s.risk === "Elevated" ? "Rising" : "High volatility",
+            trend_curve: s.risk === "Normal" ? "Stable" : s.risk === "Elevated" ? "Increasing" : "Increasing",
+            predicted_series: DEMO_GLUCOSE_FORECAST_SERIES,
           },
         },
         {
           module: "smart_recommendation_system",
           requires_doctor_approval: s.risk !== "Normal",
-          recommendation: s.dose || "Continue current monitoring plan; log meals consistently.",
+          recommendation: s.dose || "Continue monitoring and meal logging.",
           prediction: { suggested_dose_units: s.dose },
         },
       ],
@@ -200,54 +342,12 @@ function buildAiPredictions(patientId, doctorId) {
 
 function buildAlerts(patientId) {
   const specs = [
-    {
-      days: 2,
-      type: "glucose_critical",
-      severity: "High",
-      title: "High glucose detected",
-      message: "Glucose reading 172 mg/dL exceeds your target range. Please review recent meals and hydration.",
-      status: "open",
-    },
-    {
-      days: 4,
-      type: "bp_critical",
-      severity: "High",
-      title: "High blood pressure alert",
-      message: "Blood pressure 140/90 mmHg recorded. Rest for 15 minutes and recheck if symptoms persist.",
-      status: "open",
-    },
-    {
-      days: 7,
-      type: "bp_trend",
-      severity: "Medium",
-      title: "Elevated BP trend",
-      message: "Average systolic over the last 3 readings is above 130 mmHg. Consider morning monitoring.",
-      status: "acknowledged",
-    },
-    {
-      days: 9,
-      type: "meal_timing",
-      severity: "Medium",
-      title: "Irregular meal timing",
-      message: "Several entries logged less than 2 hours after meals. This may affect glucose interpretation.",
-      status: "open",
-    },
-    {
-      days: 12,
-      type: "health_entry",
-      severity: "Low",
-      title: "Health entry submitted",
-      message: "Your vitals were logged successfully. Keep up daily tracking for better AI insights.",
-      status: "closed",
-    },
-    {
-      days: 14,
-      type: "weekly_summary",
-      severity: "Low",
-      title: "Weekly summary ready",
-      message: "Your 7-day health summary is available on the dashboard.",
-      status: "closed",
-    },
+    { days: 2, type: "glucose_critical", severity: "High", title: "High glucose detected", message: "Glucose 172 mg/dL exceeds target. Review meals and hydration.", status: "open" },
+    { days: 4, type: "bp_critical", severity: "High", title: "High blood pressure", message: "BP 140/90 recorded. Rest and recheck if symptoms persist.", status: "open" },
+    { days: 7, type: "bp_trend", severity: "Medium", title: "Elevated BP trend", message: "Average systolic above 130 mmHg over 3 readings.", status: "acknowledged" },
+    { days: 9, type: "meal_timing", severity: "Medium", title: "Irregular meal timing", message: "Several logs within 2 hours of meals.", status: "open" },
+    { days: 12, type: "health_entry", severity: "Low", title: "Health entry logged", message: "Vitals saved successfully. Keep daily tracking.", status: "closed" },
+    { days: 14, type: "weekly_summary", severity: "Low", title: "Weekly summary ready", message: "Your 7-day summary is on the dashboard.", status: "closed" },
   ];
 
   return specs.map((s) => {
@@ -268,30 +368,10 @@ function buildAlerts(patientId) {
 
 function buildDoctorFeedback(patientId, doctorId, consultationIds) {
   const specs = [
-    {
-      days: 12,
-      notes: "Overall health is stable. Continue balanced meals, 30 minutes of light activity daily, and stay hydrated.",
-      diagnosis: "Type 2 diabetes — controlled",
-      lifestyle: "Reduce refined carbs at dinner; add a short walk after meals.",
-    },
-    {
-      days: 9,
-      notes: "Responding to your elevated glucose reading (178 mg/dL): avoid sugary drinks and recheck fasting glucose tomorrow.",
-      diagnosis: "Post-prandial hyperglycemia",
-      monitoring: "Log glucose before breakfast and 2 hours after largest meal for 5 days.",
-    },
-    {
-      days: 6,
-      notes: "Reminder: take Metformin 500mg with your evening meal as prescribed. Do not skip doses.",
-      diagnosis: "",
-      medicalAdvisory: "Metformin 500mg daily with dinner. Contact clinic if nausea persists.",
-    },
-    {
-      days: 3,
-      notes: "Great improvement in blood pressure readings over the past week. Your latest BP 120/78 is excellent — keep up the good work!",
-      diagnosis: "Hypertension — improving",
-      lifestyle: "Continue low-sodium diet and regular monitoring.",
-    },
+    { days: 12, notes: "Overall health stable. Balanced meals and light daily activity recommended.", diagnosis: "Type 2 diabetes — controlled", lifestyle: "Walk 20 min after dinner." },
+    { days: 9, notes: "Elevated glucose 178 mg/dL — avoid sugary drinks; recheck fasting tomorrow.", diagnosis: "Post-prandial hyperglycemia", monitoring: "Log glucose before breakfast and 2h after largest meal." },
+    { days: 6, notes: "Take Metformin 500mg with evening meal as prescribed.", diagnosis: "", medicalAdvisory: "Metformin 500mg daily with dinner." },
+    { days: 3, notes: "BP improved to 120/78 — excellent progress.", diagnosis: "Hypertension — improving", lifestyle: "Continue low-sodium diet." },
   ];
 
   return specs.map((s, i) => {
@@ -302,12 +382,8 @@ function buildDoctorFeedback(patientId, doctorId, consultationIds) {
       consultationId: consultationIds[i % consultationIds.length] || null,
       notes: `${s.notes} [${SEED_TAG}]`,
       diagnosis: s.diagnosis || "",
-      recommendations: {
-        lifestyle: s.lifestyle || "",
-        monitoring: s.monitoring || "",
-        medicalAdvisory: s.medicalAdvisory || "",
-      },
-      followUp: { timeframe: "2 weeks", nextVisitDate: daysAgo(-14) },
+      recommendations: { lifestyle: s.lifestyle || "", monitoring: s.monitoring || "", medicalAdvisory: s.medicalAdvisory || "" },
+      followUp: { timeframe: "2 weeks", nextVisitDate: daysAgo(-10) },
       status: "submitted",
       createdAt,
       updatedAt: createdAt,
@@ -316,18 +392,14 @@ function buildDoctorFeedback(patientId, doctorId, consultationIds) {
 }
 
 function buildConsultations(patientId, doctorId) {
-  const nextWeek = daysAgo(-5, 15, 0);
-  const fiveDaysAgo = daysAgo(5, 11, 0);
-  const completedVisit = daysAgo(12, 10, 30);
-
   return [
     {
       patientId,
       doctorId,
-      date: nextWeek,
+      date: daysAgo(-5, 15, 0),
       time: "15:00",
       status: "Pending",
-      notes: `Follow-up on recent glucose spikes and medication adherence. [${SEED_TAG}]`,
+      notes: `Follow-up on glucose trends. [${SEED_TAG}]`,
       consultationType: "Video consultation",
       createdAt: daysAgo(1),
       updatedAt: daysAgo(1),
@@ -335,22 +407,21 @@ function buildConsultations(patientId, doctorId) {
     {
       patientId,
       doctorId,
-      date: fiveDaysAgo,
+      date: daysAgo(5, 11, 0),
       time: "11:00",
       status: "Accepted",
-      notes: `Review BP trend and adjust monitoring plan. [${SEED_TAG}]`,
+      notes: `BP trend review. [${SEED_TAG}]`,
       consultationType: "Video consultation",
-      zegoLink: "",
       createdAt: daysAgo(8),
       updatedAt: daysAgo(5),
     },
     {
       patientId,
       doctorId,
-      date: completedVisit,
+      date: daysAgo(12, 10, 30),
       time: "10:30",
       status: "Completed",
-      notes: `Initial diabetes management review — completed successfully. [${SEED_TAG}]`,
+      notes: `Initial diabetes review completed. [${SEED_TAG}]`,
       consultationType: "Video consultation",
       durationMinutes: 30,
       createdAt: daysAgo(13),
@@ -361,14 +432,14 @@ function buildConsultations(patientId, doctorId) {
 
 function buildChatMessages(patientId, doctorId) {
   const thread = [
-    { from: "patient", days: 11, text: "Doctor, I started logging daily this week. My glucose was 155 yesterday evening." },
-    { from: "doctor", days: 11, text: "Good initiative. Continue twice-daily logs for the next 15 days so we can see a clear trend." },
-    { from: "patient", days: 7, text: "Good morning Doctor, my fasting glucose was 102 today. Is that okay?" },
-    { from: "doctor", days: 7, text: "Good morning! 102 mg/dL fasting is within an acceptable range. Keep logging after meals." },
-    { from: "patient", days: 4, text: "I had a reading of 172 after dinner. Should I be worried?" },
-    { from: "doctor", days: 4, text: "That is elevated. Note what you ate, hydrate well, and recheck in the morning. I've added notes to your chart." },
-    { from: "patient", days: 2, text: "Today's BP was 120/78. Feeling much better, thank you." },
-    { from: "doctor", days: 2, text: "Excellent progress on BP. Continue your current plan and we'll review at your upcoming consultation." },
+    { from: "patient", days: 11, text: "Doctor, I started daily logging. Glucose was 155 last night." },
+    { from: "doctor", days: 11, text: "Good work. Keep logging for the next two weeks so we can see trends clearly." },
+    { from: "patient", days: 7, text: "Fasting glucose 102 today — is that okay?" },
+    { from: "doctor", days: 7, text: "Yes, that's acceptable. Continue post-meal logs as well." },
+    { from: "patient", days: 4, text: "172 after dinner yesterday — should I worry?" },
+    { from: "doctor", days: 4, text: "That's elevated. Note your meal, hydrate, and recheck in the morning." },
+    { from: "patient", days: 2, text: "BP 120/78 today. Feeling better!" },
+    { from: "doctor", days: 2, text: "Great progress. We'll review everything at your next visit." },
   ];
 
   return thread.map((m, i) => {
@@ -388,12 +459,12 @@ function buildChatMessages(patientId, doctorId) {
 
 function buildCaregiverDoctorMessages(caregiverId, doctorId, patientId) {
   const thread = [
-    { from: "caregiver", days: 10, text: "Hello Doctor, glucose was high (178) a few days ago — any advice for home monitoring this week?" },
-    { from: "doctor", days: 10, text: "Please ensure they log meals and take Metformin with dinner. Recheck fasting glucose and message me if above 140." },
-    { from: "caregiver", days: 6, text: "They've been logging vitals daily for the past two weeks. BP today was 120/78." },
-    { from: "doctor", days: 6, text: "Yes, continue twice-daily BP checks for this half-month period. Their trend is improving — thank you." },
-    { from: "caregiver", days: 3, text: "Latest reading 118 mg/dL. Should we keep the same meal schedule?" },
-    { from: "doctor", days: 3, text: "Yes, maintain current meal timing. I'll review full trends at the upcoming consultation." },
+    { from: "caregiver", days: 10, text: "Hi Dr. Chen — patient's glucose hit 178 recently. Home monitoring advice?" },
+    { from: "doctor", days: 10, text: "Ensure meal logs and Metformin with dinner. Message me if fasting glucose exceeds 140." },
+    { from: "caregiver", days: 6, text: "Daily vitals are consistent. BP today 120/78." },
+    { from: "doctor", days: 6, text: "Please continue twice-daily BP checks this week. Trend looks good." },
+    { from: "caregiver", days: 3, text: "Latest glucose 118. Same meal schedule?" },
+    { from: "doctor", days: 3, text: "Yes, keep current timing. I'll review charts at consultation." },
   ];
 
   return thread.map((m, i) => {
@@ -414,69 +485,76 @@ function buildCaregiverDoctorMessages(caregiverId, doctorId, patientId) {
 async function seed() {
   await connect();
 
-  const patient = await findUserByEmail(EMAILS.patient, "patient");
-  const doctor = await findUserByEmail(EMAILS.doctor, "doctor");
-  const caregiver = await findUserByEmail(EMAILS.caregiver, "caregiver");
+  const doctorResult = await upsertAccount({
+    ...ACCOUNTS.doctor,
+    extra: {
+      specialization: ACCOUNTS.doctor.specialization,
+      doctorVerificationStatus: "approved",
+    },
+  });
 
-  console.log(`Patient:   ${patient.name} (${patient._id})`);
-  console.log(`Doctor:    ${doctor.name} (${doctor._id})`);
-  console.log(`Caregiver: ${caregiver.name} (${caregiver._id})`);
+  const patientResult = await upsertAccount({ ...ACCOUNTS.patient });
+  const caregiverResult = await upsertAccount({ ...ACCOUNTS.caregiver });
+
+  const doctor = doctorResult.user;
+  const patient = patientResult.user;
+  const caregiver = caregiverResult.user;
+
+  await linkAccounts(patient, doctor, caregiver);
+
+  console.log("\n📋 Committee demo accounts (all linked):\n");
+  console.log(`   Patient:   ${patient.name}  →  ${ACCOUNTS.patient.email}  ${patientResult.created ? "(created)" : "(updated)"}`);
+  console.log(`   Doctor:    ${doctor.name}  →  ${ACCOUNTS.doctor.email}  ${doctorResult.created ? "(created)" : "(updated)"}`);
+  console.log(`   Caregiver: ${caregiver.name}  →  ${ACCOUNTS.caregiver.email}  ${caregiverResult.created ? "(created)" : "(updated)"}`);
+  console.log(`\n   Password for all three: ${DEMO_PASSWORD}`);
+
+  const summary = { healthEntries: 0, aiPredictions: 0, alerts: 0, doctorFeedback: 0, consultations: 0, chatMessages: 0, caregiverMessages: 0, forecastHealth: 0, forecastAi: 0 };
 
   if (await seedAlreadyRun(patient._id)) {
-    console.log("\nSeed already run — skipping (demo data marker found).");
+    console.log("\n⏭️  Core demo data already present — skipped full insert (accounts still updated/linked).");
+    const forecast = await ensureForecastDemoData(patient._id, doctor._id);
+    summary.forecastHealth = forecast.healthEntries;
+    summary.forecastAi = forecast.aiSnapshot;
+    if (forecast.healthEntries || forecast.aiSnapshot) {
+      console.log("\n📈 Glucose forecast demo data added:");
+      console.log(`   Extra glucose readings: ${forecast.healthEntries}`);
+      console.log(`   Forecast AI snapshot:   ${forecast.aiSnapshot ? "yes" : "already present"}`);
+    } else {
+      console.log("\n📈 Glucose forecast demo data already present.");
+    }
     await mongoose.disconnect();
     return;
   }
 
-  const summary = {
-    healthEntries: 0,
-    aiPredictions: 0,
-    alerts: 0,
-    doctorFeedback: 0,
-    consultations: 0,
-    chatMessages: 0,
-    caregiverMessages: 0,
-  };
+  summary.healthEntries = (await HealthEntry.insertMany(buildHealthEntries(patient._id))).length;
+  summary.aiPredictions = (await AiSimulationResult.insertMany(buildAiPredictions(patient._id, doctor._id))).length;
+  summary.alerts = (await Alert.insertMany(buildAlerts(patient._id))).length;
 
-  const healthRows = buildHealthEntries(patient._id);
-  const insertedHealth = await HealthEntry.insertMany(healthRows);
-  summary.healthEntries = insertedHealth.length;
+  const consults = await Consultation.insertMany(buildConsultations(patient._id, doctor._id));
+  summary.consultations = consults.length;
+  const consultIds = consults.map((c) => c._id);
 
-  const aiRows = buildAiPredictions(patient._id, doctor._id);
-  const insertedAi = await AiSimulationResult.insertMany(aiRows);
-  summary.aiPredictions = insertedAi.length;
+  summary.doctorFeedback = (await DoctorFeedback.insertMany(buildDoctorFeedback(patient._id, doctor._id, consultIds))).length;
+  summary.chatMessages = (await ChatMessage.insertMany(buildChatMessages(patient._id, doctor._id))).length;
+  summary.caregiverMessages = (
+    await CaregiverDoctorMessage.insertMany(buildCaregiverDoctorMessages(caregiver._id, doctor._id, patient._id))
+  ).length;
 
-  const alertRows = buildAlerts(patient._id);
-  const insertedAlerts = await Alert.insertMany(alertRows);
-  summary.alerts = insertedAlerts.length;
+  const forecast = await ensureForecastDemoData(patient._id, doctor._id);
+  summary.forecastHealth = forecast.healthEntries;
+  summary.forecastAi = forecast.aiSnapshot;
 
-  const consultRows = buildConsultations(patient._id, doctor._id);
-  const insertedConsults = await Consultation.insertMany(consultRows);
-  summary.consultations = insertedConsults.length;
-  const consultIds = insertedConsults.map((c) => c._id);
-
-  const feedbackRows = buildDoctorFeedback(patient._id, doctor._id, consultIds);
-  const insertedFeedback = await DoctorFeedback.insertMany(feedbackRows);
-  summary.doctorFeedback = insertedFeedback.length;
-
-  const chatRows = buildChatMessages(patient._id, doctor._id);
-  const insertedChat = await ChatMessage.insertMany(chatRows);
-  summary.chatMessages = insertedChat.length;
-
-  const cgRows = buildCaregiverDoctorMessages(caregiver._id, doctor._id, patient._id);
-  const insertedCg = await CaregiverDoctorMessage.insertMany(cgRows);
-  summary.caregiverMessages = insertedCg.length;
-
-  console.log("\n✅ Demo seed complete (insert-only, users unchanged):\n");
-  console.log(`   Health entries:        ${summary.healthEntries}`);
+  console.log("\n✅ Demo data inserted (last 15 days):\n");
+  console.log(`   Health entries:        ${summary.healthEntries} (2 glucose logs/day)`);
   console.log(`   AI predictions:        ${summary.aiPredictions}`);
   console.log(`   Alerts:                ${summary.alerts}`);
   console.log(`   Doctor feedback:       ${summary.doctorFeedback}`);
   console.log(`   Consultations:         ${summary.consultations}`);
   console.log(`   Doctor–patient chat:   ${summary.chatMessages}`);
   console.log(`   Caregiver–doctor chat: ${summary.caregiverMessages}`);
-  console.log(`\n   Date window: last ${DEMO_DAYS} days (half month)`);
-  console.log(`   Marker tag: ${SEED_TAG}`);
+  if (summary.forecastAi) {
+    console.log(`   Forecast AI snapshot:  added (6–24h chart)`);
+  }
 
   await mongoose.disconnect();
 }

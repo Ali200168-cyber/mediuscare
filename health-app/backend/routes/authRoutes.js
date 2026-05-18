@@ -36,7 +36,6 @@ const recordFailure = (key) => {
 };
 const clearFailures = (key) => loginAttempts.delete(key);
 const hashToken = (value) => crypto.createHash("sha256").update(value).digest("hex");
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UPLOADS_DIR = path.resolve(__dirname, "..", "uploads", "doctor-proofs");
 const buildAccessToken = (user) =>
   jwt.sign({ _id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d" });

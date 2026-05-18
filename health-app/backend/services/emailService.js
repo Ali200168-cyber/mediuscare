@@ -1,9 +1,3 @@
-module.exports = {
-  // All email sending is intentionally disabled/removed.
-  isEmailConfigured: () => false,
-  sendSmsNotification: async ({ phone, message }) => ({ skipped: true, reason: "email-disabled", phone, message }),
-};
-
 const nodemailer = require("nodemailer");
 
 const EMAIL_PROVIDER = String(process.env.EMAIL_PROVIDER || "smtp").toLowerCase();
@@ -40,7 +34,6 @@ const getSmtpTransporter = () => {
 const sendViaResend = async ({ toEmail, subject, text, html, attachments }) => {
   if (!hasResendConfig()) throw new Error("Resend is not configured.");
   if (attachments?.length) {
-    // Resend supports attachments but needs base64; keep it simple and skip attachments unless you need them.
     console.warn("[email] Attachments are not supported in current Resend integration; sending without attachments.");
   }
   const payload = {
@@ -65,13 +58,6 @@ const sendViaResend = async ({ toEmail, subject, text, html, attachments }) => {
   }
   return data;
 };
-
-const escapeHtml = (value) =>
-  String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 
 const sendCriticalHealthAlertEmail = async ({ toEmail, recipientName, patientName, glucose, recordedAt }) => {
   if (!isEmailConfigured()) {
@@ -174,4 +160,3 @@ module.exports = {
   sendAppointmentCreatedEmail,
   sendSmsNotification,
 };
-
